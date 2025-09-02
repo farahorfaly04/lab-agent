@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lab-agent"
+version = "0.1.0"
+description = "Lab Platform Device Agent - Edge device communication"
+authors = [{name = "Lab Platform Team"}]
+requires-python = ">=3.9"
+dependencies = [
+    "paho-mqtt==1.6.1",
+    "PyYAML==6.0.2",
+]
+
+[project.scripts]
+lab-agent = "lab_agent.agent:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

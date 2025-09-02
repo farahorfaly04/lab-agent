@@ -1,0 +1,26 @@
+# Lab Platform Device Agent Configuration Example
+
+device_id: "lab-device-01"
+labels: ["example", "lab"]
+
+# MQTT broker connection
+mqtt:
+  host: "localhost"
+  port: 1883
+  username: "mqtt"
+  password: "public"
+
+# Heartbeat interval in seconds
+heartbeat_interval_s: 10
+
+# Modules configuration
+# Modules will be loaded dynamically from features/ directory
+# You can override module settings here
+modules:
+  # Example NDI module configuration
+  ndi:
+    ndi_path: "/usr/local/lib/ndi"
+    start_cmd_template: "ndi-viewer {source}"
+    record_start_cmd_template: "ndi-recorder -i {source} -o /tmp/recording_{device_id}.mp4"
+    log_file: "/tmp/ndi_{device_id}.log"
+    set_input_restart: true
