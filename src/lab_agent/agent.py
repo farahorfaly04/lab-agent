@@ -19,7 +19,7 @@ from lab_agent.common import (
 class DeviceAgent:
     """Device agent for Lab Platform.
 
-    - Loads configuration from config.yaml
+    - Loads configuration from environment variables and .env file
     - Dynamically loads modules from features/
     - Connects to the MQTT broker
     - Subscribes for per-module commands and config updates

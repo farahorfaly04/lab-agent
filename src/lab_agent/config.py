@@ -32,17 +32,22 @@ def load_agent_config() -> Dict[str, Any]:
     """Load device agent configuration from file and environment variables."""
     
     # Look for config file in multiple locations
-    config_paths = [
-        Path(os.getenv("AGENT_CONFIG", "")),        # Explicit config file
-        Path.cwd() / "config.yaml",                 # Current directory
-        Path(__file__).parent.parent.parent / "config.yaml",  # device-agent/config.yaml
+    config_paths = []
+    
+    # Only add AGENT_CONFIG path if it's explicitly set and not empty
+    agent_config_env = os.getenv("AGENT_CONFIG")
+    if agent_config_env and agent_config_env.strip():
+        config_paths.append(Path(agent_config_env))
+    
+    # Add other search paths
+    config_paths.extend([
         Path.home() / ".lab-agent-config.yaml",    # User home
         Path("/etc/lab-platform/agent.yaml"),      # System config
-    ]
+    ])
     
     config_file = None
     for path in config_paths:
-        if path.exists():
+        if path.exists() and path.is_file():
             config_file = path
             break
     

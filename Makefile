@@ -10,9 +10,9 @@ help: ## Show this help message
 install: ## Install device agent
 	pip install -e .
 
-setup-config: ## Create config.yaml from example
-	cp config.yaml.example config.yaml
-	@echo "Edit config.yaml with your device settings"
+setup-config: ## Create .env from example
+	cp env.example .env
+	@echo "Edit .env with your device settings"
 
 run: ## Run device agent
 	lab-agent
@@ -39,17 +39,11 @@ install-system: ## Install as system service (Linux)
 	sudo cp lab-agent.service /etc/systemd/system/
 	sudo systemctl daemon-reload
 	sudo systemctl enable lab-agent
-	@echo "Service installed. Configure config.yaml then: sudo systemctl start lab-agent"
+	@echo "Service installed. Configure .env then: sudo systemctl start lab-agent"
 
 # Development helpers
 dev-ndi: ## Run with NDI module for development
-	@echo "device_id: dev-ndi-01" > dev-config.yaml
-	@echo "modules: {ndi: {}}" >> dev-config.yaml
-	@echo "mqtt: {host: localhost, port: 1883}" >> dev-config.yaml
-	AGENT_CONFIG=dev-config.yaml lab-agent
+	DEVICE_ID=dev-ndi-01 DEVICE_LABELS=ndi,development MQTT_HOST=localhost lab-agent
 
 dev-projector: ## Run with projector module for development  
-	@echo "device_id: dev-proj-01" > dev-config.yaml
-	@echo "modules: {projector: {}}" >> dev-config.yaml
-	@echo "mqtt: {host: localhost, port: 1883}" >> dev-config.yaml
-	AGENT_CONFIG=dev-config.yaml lab-agent
+	DEVICE_ID=dev-proj-01 DEVICE_LABELS=projector,development MQTT_HOST=localhost lab-agent
