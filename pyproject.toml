@@ -11,6 +11,12 @@ requires-python = ">=3.9"
 dependencies = [
     "paho-mqtt==1.6.1",
     "PyYAML==6.0.2",
+    # Serial communication (for projector module)
+    "pyserial==3.5",
+    # System monitoring
+    "psutil==5.9.6",
+    # Testing
+    "pytest==7.4.3",
 ]
 
 [project.scripts]
