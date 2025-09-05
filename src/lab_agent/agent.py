@@ -59,9 +59,40 @@ class DeviceAgent:
 
     def _load_feature_modules(self):
         """Load module classes from features/ directory."""
-        # Look for features in the main repo
-        features_dir = Path(__file__).resolve().parents[4] / "features"
-        if not features_dir.exists():
+        import os
+        
+        # Check for FEATURES_PATH environment variable first
+        features_path = os.getenv("FEATURES_PATH")
+        if features_path:
+            features_dir = Path(features_path).resolve()
+            if features_dir.exists():
+                print(f"Loading features from FEATURES_PATH: {features_dir}")
+            else:
+                print(f"FEATURES_PATH specified but directory not found: {features_dir}")
+                features_dir = None
+        else:
+            # Fallback to searching multiple locations
+            possible_features_dirs = [
+                Path.cwd() / ".." / "features",  # Parent directory (common for separate repos)
+                Path.cwd() / "features",  # Current working directory
+                Path(__file__).resolve().parent.parent.parent / "features",  # Relative to package
+                Path.home() / "lab-features",  # User home directory
+                Path("/opt/lab-platform/features"),  # System installation
+            ]
+            
+            features_dir = None
+            for dir_path in possible_features_dirs:
+                if dir_path.exists():
+                    features_dir = dir_path
+                    print(f"Found features directory: {features_dir}")
+                    break
+        
+        if not features_dir:
+            print("No features directory found. Set FEATURES_PATH environment variable or place features in one of these locations:")
+            print("  - ../features (parent directory)")
+            print("  - ./features (current directory)")
+            print("  - ~/lab-features (user home)")
+            print("  - /opt/lab-platform/features (system)")
             return
         
         for module_dir in features_dir.glob("modules/*/"):
@@ -339,26 +370,15 @@ class DeviceAgent:
 
 def main():
     """Main entry point for the device agent."""
-    # Look for config file
-    config_paths = [
-        Path(__file__).parent / "config.yaml",
-        Path.cwd() / "config.yaml",
-        Path.cwd() / "device-agent" / "config.yaml"
-    ]
+    from .config import load_agent_config
     
-    config_file = None
-    for path in config_paths:
-        if path.exists():
-            config_file = path
-            break
-    
-    if not config_file:
-        print("Error: config.yaml not found")
-        return
-    
-    cfg = yaml.safe_load(config_file.read_text())
-    agent = DeviceAgent(cfg)
-    agent.start()
+    try:
+        cfg = load_agent_config()
+        agent = DeviceAgent(cfg)
+        agent.start()
+    except Exception as e:
+        print(f"Failed to start agent: {e}")
+        return 1
 
     def _graceful(*_):
         agent.shutdown()

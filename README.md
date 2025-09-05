@@ -1,85 +1,124 @@
 # Lab Platform Device Agent
 
-Edge device communication agent for the Lab Platform. Runs on devices like Raspberry Pi to enable remote control and monitoring.
+Edge device communication agent that runs on Raspberry Pi, lab computers, and IoT devices to enable remote control and monitoring.
 
-## Features
+## Quick Start
 
-- **MQTT Communication**: Real-time bidirectional communication with orchestrator
-- **Dynamic Module Loading**: Load functionality from features directory
-- **Device Metadata**: Automatic capability discovery and publishing
-- **Command Handling**: Execute commands from orchestrator
-- **Health Monitoring**: Heartbeat and status reporting
-- **Configuration Management**: Runtime configuration updates
-- **Graceful Shutdown**: Clean process termination
-
-## Installation
+### Installation
 
 ```bash
 pip install -e .
 ```
 
-## Usage
+### Configuration
 
-### Command Line
+Option A - Environment variables (recommended):
 ```bash
-lab-agent
+# Copy example and edit
+cp env.example .env
+
+# Key settings:
+export DEVICE_ID=lab-device-01
+export MQTT_HOST=10.205.10.7
+export MQTT_USERNAME=mqtt
+export MQTT_PASSWORD=123456789
+export FEATURES_PATH=../features  # Path to features directory
 ```
 
-### Python Module
-```bash
-python -m lab_agent.agent
-```
-
-## Configuration
-
-Create `config.yaml` from the example:
-
+Option B - YAML config file:
 ```yaml
 device_id: "lab-device-01"
-labels: ["example", "lab"]
-
+labels: ["lab", "production"]
 mqtt:
-  host: "localhost"
+  host: "10.205.10.7"
   port: 1883
   username: "mqtt"
-  password: "public"
-
+  password: "123456789"
 heartbeat_interval_s: 10
 modules: {}  # Loaded dynamically from features/
 ```
 
+### Running
+
+```bash
+lab-agent
+```
+
+## Features
+
+- **MQTT Communication**: Connects to orchestrator via MQTT
+- **Dynamic Module Loading**: Loads modules from `features/modules/` directory
+- **Device Metadata**: Publishes capabilities and status
+- **Command Handling**: Processes commands from orchestrator
+- **Heartbeat Monitoring**: Continuous health reporting
+- **Process Management**: Manages external processes for modules
+- **Structured Logging**: JSON logs with device context
+- **Metrics Collection**: Lightweight system monitoring
+
 ## Module Development
 
-Extend the `Module` base class:
+1. Create module directory: `features/modules/your_module/`
+2. Add `manifest.yaml`:
+```yaml
+name: your_module
+module_file: your_module.py
+class_name: YourModule
+```
+3. Implement module class extending `Module`
+
+## Module Interface
 
 ```python
 from lab_agent.base import Module
 
-class MyModule(Module):
-    name = "my_module"
+class YourModule(Module):
+    name = "your_module"
     
-    def handle_cmd(self, action, params):
+    def handle_cmd(self, action: str, params: dict) -> tuple[bool, str | None, dict]:
         if action == "start":
             # Handle start command
             return True, None, {"status": "started"}
-        return False, f"unknown action: {action}", {}
+        return False, f"Unknown action: {action}", {}
 ```
 
 ## MQTT Topics
 
-The agent communicates using structured MQTT topics:
-
 - `/lab/device/{device_id}/meta` - Device metadata (retained)
-- `/lab/device/{device_id}/status` - Device status (retained)
+- `/lab/device/{device_id}/status` - Device heartbeat (retained)  
 - `/lab/device/{device_id}/cmd` - Device commands
-- `/lab/device/{device_id}/evt` - Device events
 - `/lab/device/{device_id}/{module}/cmd` - Module commands
 - `/lab/device/{device_id}/{module}/status` - Module status (retained)
-- `/lab/device/{device_id}/{module}/evt` - Module events
 
-## Architecture
+## Health Monitoring
 
-- **Agent Core**: Main event loop and MQTT handling
-- **Module System**: Dynamic loading of device functionality
-- **Common Utilities**: Shared MQTT topics and message formats
-- **Configuration**: YAML-based device configuration
+The agent provides lightweight HTTP health endpoints (optional):
+
+- `GET :8080/health` - Health summary
+- `GET :8080/metrics` - Detailed metrics
+
+## Dependencies
+
+- Python 3.9+
+- MQTT broker connection
+- Features directory with modules
+- Hardware-specific dependencies (pyserial for projector, etc.)
+
+## Development
+
+```bash
+# Install with dev dependencies  
+pip install -e .
+
+# Run with debug logging
+LOG_LEVEL=DEBUG lab-agent
+
+# Test module loading
+python -c "from lab_agent.agent import DeviceAgent; print('✓ Agent imports OK')"
+```
+
+## System Requirements
+
+- Linux (Raspberry Pi OS, Ubuntu) or macOS
+- Python 3.9+
+- Network connectivity to MQTT broker
+- Hardware access for specific modules (USB, serial ports, etc.)
