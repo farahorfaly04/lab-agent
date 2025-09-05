@@ -47,19 +47,37 @@ def load_agent_config() -> Dict[str, Any]:
     
     if not config_file:
         # Fallback to environment variables only
+        print("No config.yaml found, using environment variables only")
+        
+        device_id = os.getenv("DEVICE_ID", "unknown-device")
+        device_labels = [label.strip() for label in os.getenv("DEVICE_LABELS", "").split(",") if label.strip()] if os.getenv("DEVICE_LABELS") else []
+        mqtt_host = os.getenv("MQTT_HOST", "localhost")
+        mqtt_port = int(os.getenv("MQTT_PORT", "1883"))
+        mqtt_username = os.getenv("MQTT_USERNAME", "mqtt")
+        mqtt_password = os.getenv("MQTT_PASSWORD", "public")
+        heartbeat_interval = int(os.getenv("HEARTBEAT_INTERVAL_S", "10"))
+        
         config = {
-            "device_id": os.getenv("DEVICE_ID", "unknown-device"),
-            "labels": os.getenv("DEVICE_LABELS", "").split(",") if os.getenv("DEVICE_LABELS") else [],
+            "device_id": device_id,
+            "labels": device_labels,
             "mqtt": {
-                "host": os.getenv("MQTT_HOST", "localhost"),
-                "port": int(os.getenv("MQTT_PORT", "1883")),
-                "username": os.getenv("MQTT_USERNAME", "mqtt"),
-                "password": os.getenv("MQTT_PASSWORD", "public"),
+                "host": mqtt_host,
+                "port": mqtt_port,
+                "username": mqtt_username,
+                "password": mqtt_password,
             },
-            "heartbeat_interval_s": int(os.getenv("HEARTBEAT_INTERVAL_S", "10")),
+            "heartbeat_interval_s": heartbeat_interval,
             "modules": {}
         }
-        print("No config.yaml found, using environment variables only")
+        
+        print("Configuration from environment variables:")
+        print(f"  Device ID: {device_id}")
+        print(f"  Labels: {device_labels}")
+        print(f"  MQTT Host: {mqtt_host}:{mqtt_port}")
+        print(f"  MQTT User: {mqtt_username}")
+        print(f"  Heartbeat: {heartbeat_interval}s")
+        print(f"  Modules configured: []")
+        
         return config
     
     # Load from YAML file
@@ -67,33 +85,84 @@ def load_agent_config() -> Dict[str, Any]:
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
         
-        # Override secrets and private variables from environment
-        # Device settings (can be overridden)
+        # Override with environment variables (from .env file)
+        overrides_applied = []
+        
+        # Device settings
         if os.getenv("DEVICE_ID"):
+            old_value = config.get("device_id")
             config["device_id"] = os.getenv("DEVICE_ID")
+            overrides_applied.append(f"DEVICE_ID: {old_value} -> {config['device_id']}")
         
         if os.getenv("DEVICE_LABELS"):
-            config["labels"] = os.getenv("DEVICE_LABELS").split(",")
+            old_value = config.get("labels", [])
+            config["labels"] = [label.strip() for label in os.getenv("DEVICE_LABELS").split(",") if label.strip()]
+            overrides_applied.append(f"DEVICE_LABELS: {old_value} -> {config['labels']}")
         
-        # MQTT settings - always override credentials from env for security
-        mqtt_config = config.get("mqtt", {})
-        mqtt_config.update({
-            "host": os.getenv("MQTT_HOST", mqtt_config.get("host", "localhost")),
-            "port": int(os.getenv("MQTT_PORT", str(mqtt_config.get("port", 1883)))),
-            "username": os.getenv("MQTT_USERNAME", mqtt_config.get("username", "mqtt")),
-            "password": os.getenv("MQTT_PASSWORD", mqtt_config.get("password", "public")),
-        })
-        config["mqtt"] = mqtt_config
+        # Ensure mqtt section exists
+        if "mqtt" not in config:
+            config["mqtt"] = {}
+        mqtt_config = config["mqtt"]
         
-        # Other settings that can be overridden
-        if os.getenv("HEARTBEAT_INTERVAL_S"):
-            config["heartbeat_interval_s"] = int(os.getenv("HEARTBEAT_INTERVAL_S"))
+        # MQTT settings - always check environment variables
+        env_mqtt_host = os.getenv("MQTT_HOST")
+        if env_mqtt_host:
+            old_value = mqtt_config.get("host", "localhost")
+            mqtt_config["host"] = env_mqtt_host
+            overrides_applied.append(f"MQTT_HOST: {old_value} -> {env_mqtt_host}")
+        elif "host" not in mqtt_config:
+            mqtt_config["host"] = "localhost"
+            
+        env_mqtt_port = os.getenv("MQTT_PORT")
+        if env_mqtt_port:
+            old_value = mqtt_config.get("port", 1883)
+            mqtt_config["port"] = int(env_mqtt_port)
+            overrides_applied.append(f"MQTT_PORT: {old_value} -> {mqtt_config['port']}")
+        elif "port" not in mqtt_config:
+            mqtt_config["port"] = 1883
+            
+        env_mqtt_username = os.getenv("MQTT_USERNAME")
+        if env_mqtt_username:
+            old_value = mqtt_config.get("username", "mqtt")
+            mqtt_config["username"] = env_mqtt_username
+            overrides_applied.append(f"MQTT_USERNAME: {old_value} -> {env_mqtt_username}")
+        elif "username" not in mqtt_config:
+            mqtt_config["username"] = "mqtt"
+            
+        env_mqtt_password = os.getenv("MQTT_PASSWORD")
+        if env_mqtt_password:
+            old_value = mqtt_config.get("password", "public")
+            mqtt_config["password"] = env_mqtt_password
+            overrides_applied.append(f"MQTT_PASSWORD: {old_value} -> [HIDDEN]")
+        elif "password" not in mqtt_config:
+            mqtt_config["password"] = "public"
+        
+        # Heartbeat interval
+        env_heartbeat = os.getenv("HEARTBEAT_INTERVAL_S")
+        if env_heartbeat:
+            old_value = config.get("heartbeat_interval_s", 10)
+            config["heartbeat_interval_s"] = int(env_heartbeat)
+            overrides_applied.append(f"HEARTBEAT_INTERVAL_S: {old_value} -> {config['heartbeat_interval_s']}")
+        elif "heartbeat_interval_s" not in config:
+            config["heartbeat_interval_s"] = 10
         
         print(f"Loaded config from: {config_file}")
+        
+        # Show environment overrides that were applied
+        if overrides_applied:
+            print("Environment variable overrides applied:")
+            for override in overrides_applied:
+                print(f"  {override}")
+        else:
+            print("No environment variable overrides found")
+            
+        # Show final configuration
+        print("Final configuration:")
         print(f"  Device ID: {config.get('device_id', 'unknown')}")
         print(f"  Labels: {config.get('labels', [])}")
         print(f"  MQTT Host: {config['mqtt']['host']}:{config['mqtt']['port']}")
-        print(f"  MQTT User: {config['mqtt']['username']} (password from env)")
+        print(f"  MQTT User: {config['mqtt']['username']}")
+        print(f"  Heartbeat: {config.get('heartbeat_interval_s', 10)}s")
         print(f"  Modules configured: {list(config.get('modules', {}).keys())}")
         
         return config
