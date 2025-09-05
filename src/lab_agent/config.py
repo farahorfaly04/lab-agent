@@ -5,29 +5,24 @@ from pathlib import Path
 from typing import Dict, Any
 import yaml
 
-# Load environment variables from .env if present
+# Load environment variables from .env in device-agent directory
 try:
     from dotenv import load_dotenv
-    # Support .env placed in various locations
+    # .env file is always in the device-agent root directory
     here = Path(__file__).resolve()
     device_agent_dir = here.parent.parent.parent  # device-agent directory
-    candidates = [
-        device_agent_dir / ".env",                  # device-agent/.env (highest priority)
-        device_agent_dir / ".env.test",             # device-agent/.env.test (for testing)
-        Path.cwd() / ".env",                        # current working directory
-        device_agent_dir.parent / ".env",           # parent of device-agent (for separate repos)
-        Path.home() / ".lab-platform.env",         # user home directory
-    ]
-    for env_path in candidates:
-        if env_path.exists():
-            load_dotenv(env_path)
-            print(f"Loaded environment from: {env_path}")
-            break
+    env_file = device_agent_dir / ".env"
+    
+    if env_file.exists():
+        load_dotenv(env_file)
+        print(f"Loaded environment from: {env_file}")
+    else:
+        print(f"No .env file found at: {env_file}")
 except ImportError:
     # python-dotenv not installed, skip
-    pass
-except Exception:
-    pass
+    print("python-dotenv not available - environment variables from shell only")
+except Exception as e:
+    print(f"Error loading .env file: {e}")
 
 
 def load_agent_config() -> Dict[str, Any]:
