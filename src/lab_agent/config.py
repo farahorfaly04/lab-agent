@@ -10,10 +10,12 @@ try:
     from dotenv import load_dotenv
     # Support .env placed in various locations
     here = Path(__file__).resolve()
+    device_agent_dir = here.parent.parent.parent  # device-agent directory
     candidates = [
-        Path.cwd() / ".env",                        # current working directory (highest priority)
-        here.parent.parent.parent / ".env",         # device-agent/.env
-        here.parent.parent.parent.parent / ".env",  # parent of device-agent (for separate repos)
+        device_agent_dir / ".env",                  # device-agent/.env (highest priority)
+        device_agent_dir / ".env.test",             # device-agent/.env.test (for testing)
+        Path.cwd() / ".env",                        # current working directory
+        device_agent_dir.parent / ".env",           # parent of device-agent (for separate repos)
         Path.home() / ".lab-platform.env",         # user home directory
     ]
     for env_path in candidates:
