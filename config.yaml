@@ -1,0 +1,21 @@
+# Lab Platform Device Agent Configuration
+# Secrets and private variables should be set in .env file
+
+device_id: "lab-device-01"  # Overridden by DEVICE_ID in .env
+labels: ["lab", "development"]  # Overridden by DEVICE_LABELS in .env
+
+# MQTT broker connection
+# Credentials will be overridden from .env file for security
+mqtt:
+  host: "localhost"  # Overridden by MQTT_HOST in .env
+  port: 1883         # Overridden by MQTT_PORT in .env
+  username: "mqtt"   # Overridden by MQTT_USERNAME in .env
+  password: "public" # Overridden by MQTT_PASSWORD in .env
+
+# Heartbeat interval in seconds
+heartbeat_interval_s: 10  # Overridden by HEARTBEAT_INTERVAL_S in .env
+
+# Modules configuration
+# Modules will be loaded dynamically from features/ directory
+# Configure module-specific settings here
+modules: {}

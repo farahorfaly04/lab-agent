@@ -1,26 +1,36 @@
 # Lab Platform Device Agent Configuration Example
+# Copy this file to config.yaml and customize as needed
+# Secrets should be set in .env file, not here
 
-device_id: "lab-device-01"
-labels: ["example", "lab"]
+device_id: "lab-device-01"  # Will be overridden by DEVICE_ID in .env
+labels: ["lab", "example"]  # Will be overridden by DEVICE_LABELS in .env
 
 # MQTT broker connection
+# Credentials will be overridden from .env file for security
 mqtt:
-  host: "localhost"
-  port: 1883
-  username: "mqtt"
-  password: "public"
+  host: "localhost"  # Will be overridden by MQTT_HOST in .env
+  port: 1883         # Will be overridden by MQTT_PORT in .env
+  username: "mqtt"   # Will be overridden by MQTT_USERNAME in .env
+  password: "public" # Will be overridden by MQTT_PASSWORD in .env
 
 # Heartbeat interval in seconds
-heartbeat_interval_s: 10
+heartbeat_interval_s: 10  # Can be overridden by HEARTBEAT_INTERVAL_S in .env
 
 # Modules configuration
 # Modules will be loaded dynamically from features/ directory
-# You can override module settings here
-modules:
-  # Example NDI module configuration
-  ndi:
-    ndi_path: "/usr/local/lib/ndi"
-    start_cmd_template: "ndi-viewer {source}"
-    record_start_cmd_template: "ndi-recorder -i {source} -o /tmp/recording_{device_id}.mp4"
-    log_file: "/tmp/ndi_{device_id}.log"
-    set_input_restart: true
+# Configure module-specific settings here
+modules: {}
+
+# Example module configurations (uncomment and modify as needed):
+# modules:
+#   ndi:
+#     ndi_path: "/usr/local/lib/ndi"
+#     start_cmd_template: "ndi-viewer {source}"
+#     record_start_cmd_template: "ndi-recorder -i {source} -o /tmp/recording_{device_id}.mp4"
+#     log_file: "/tmp/ndi_{device_id}.log"
+#     set_input_restart: true
+#   
+#   projector:
+#     serial_port: "/dev/ttyUSB0"
+#     baud_rate: 9600
+#     timeout: 5
