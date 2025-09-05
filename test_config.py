@@ -8,6 +8,18 @@ from pathlib import Path
 # Add the src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+# Load test environment file manually
+try:
+    from dotenv import load_dotenv
+    test_env_file = Path(__file__).parent / "test.env"
+    if test_env_file.exists():
+        load_dotenv(test_env_file)
+        print(f"Loaded test environment from: {test_env_file}")
+    else:
+        print("No test.env file found")
+except ImportError:
+    print("python-dotenv not available")
+
 from lab_agent.config import load_agent_config
 
 def test_config_loading():
