@@ -17,8 +17,10 @@ ALLOWED_ACTORS = {"orchestrator", "app", "user", "test", "api"}
 def now_iso() -> str:
     """Return current time in UTC ISO-8601 format with 'Z'."""
     try:
-        return datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        # Use timezone-aware datetime for better compatibility
+        return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
     except Exception:
+        # Fallback to time module if datetime fails
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 def jdump(d: Dict[str, Any]) -> str:

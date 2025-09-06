@@ -47,3 +47,12 @@ dev-ndi: ## Run with NDI module for development
 
 dev-projector: ## Run with projector module for development  
 	DEVICE_ID=dev-proj-01 DEVICE_LABELS=projector,development MQTT_HOST=localhost lab-agent
+
+check-readiness: ## Check if device agent is ready to run
+	python3 scripts/check_readiness.py
+
+check-readiness-verbose: ## Check readiness with verbose output
+	python3 scripts/check_readiness.py --verbose
+
+check-readiness-json: ## Check readiness with JSON output
+	python3 scripts/check_readiness.py --json

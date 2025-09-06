@@ -42,7 +42,7 @@ class StateReconciler:
                 "device_id": self.device_id,
                 "modules": self.desired_state,
                 "last_reconcile": time.time(),
-                "timestamp": datetime.utcnow().isoformat() + 'Z'
+                "timestamp": datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
             }
             
             # Write to temporary file first, then rename (atomic operation)

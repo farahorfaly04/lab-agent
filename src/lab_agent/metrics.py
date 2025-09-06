@@ -45,7 +45,7 @@ class AgentMetrics:
     
     def __post_init__(self):
         if self.last_updated is None:
-            self.last_updated = datetime.utcnow().isoformat() + 'Z'
+            self.last_updated = datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
 
 class AgentMetricsCollector:
@@ -63,7 +63,7 @@ class AgentMetricsCollector:
     def update_uptime(self):
         """Update uptime metric."""
         self.metrics.uptime_seconds = time.time() - self.start_time
-        self.metrics.last_updated = datetime.utcnow().isoformat() + 'Z'
+        self.metrics.last_updated = datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
     
     def record_mqtt_message_sent(self, topic: str, size_bytes: int):
         """Record MQTT message sent."""
@@ -82,7 +82,7 @@ class AgentMetricsCollector:
     
     def record_mqtt_connected(self):
         """Record successful MQTT connection."""
-        self.metrics.mqtt_last_connected = datetime.utcnow().isoformat() + 'Z'
+        self.metrics.mqtt_last_connected = datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
         self.update_uptime()
     
     def record_module_loaded(self, module_name: str, success: bool):
@@ -188,7 +188,7 @@ class AgentMetricsCollector:
             ),
             "mqtt_connected": self.metrics.mqtt_last_connected is not None,
             "last_error": self.metrics.last_error,
-            "timestamp": datetime.utcnow().isoformat() + 'Z'
+            "timestamp": datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
         }
     
     def reset_counters(self):
